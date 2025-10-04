@@ -1,0 +1,42 @@
+name: Spiralwick Pinterest Daily (Diagnostics)
+
+on:
+  schedule:
+    - cron: '15 8 * * *'   # 08:15 Europe/London
+  workflow_dispatch: {}
+
+jobs:
+  post-pins:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Show repo files
+        run: |
+          pwd
+          ls -la
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install deps
+        run: |
+          python -V
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          python -c "import requests; import PIL; print('Imports OK')"
+
+      - name: Run bot (DRY RUN first time)
+        env:
+          PYTHONUNBUFFERED: "1"
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          PINTEREST_ACCESS_TOKEN: ${{ secrets.PINTEREST_ACCESS_TOKEN }}
+          PINTEREST_BOARD_ID: ${{ secrets.PINTEREST_BOARD_ID }}
+          SPIRALWICK_STORE_URL: ${{ secrets.SPIRALWICK_STORE_URL }}
+          SPIRALWICK_BRAND: ${{ secrets.SPIRALWICK_BRAND }}
+          DAILY_PINS: ${{ secrets.DAILY_PINS }}
+          UTM_SOURCE: ${{ secrets.UTM_SOURCE }}
+          UTM_CAMPAIGN: ${{ secrets.UTM_CAMPAIGN }}
+          DRY_RUN: "1"   # keep 1 for your first test run
+        run: python main.py
