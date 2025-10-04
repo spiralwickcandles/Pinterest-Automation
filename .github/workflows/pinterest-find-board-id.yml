@@ -1,0 +1,28 @@
+name: Find Pinterest Board ID
+on: [workflow_dispatch]
+
+jobs:
+  find-board-id:
+    runs-on: ubuntu-latest
+    steps:
+      - name: List boards with IDs
+        env:
+          PINTEREST_ACCESS_TOKEN: ${{ secrets.PINTEREST_ACCESS_TOKEN }}
+        run: |
+          if [ -z "$PINTEREST_ACCESS_TOKEN" ]; then
+            echo "Missing PINTEREST_ACCESS_TOKEN secret. Add it in Settings → Secrets."
+            exit 1
+          fi
+          echo "Fetching your boards…"
+          curl -s -H "Authorization: Bearer $PINTEREST_ACCESS_TOKEN" https://api.pinterest.com/v5/boards \
+          | python - << 'PY'
+import sys, json
+data = json.load(sys.stdin)
+items = data.get("items", [])
+if not items:
+    print("No boards returned. Is your token correct and has boards:read scope?")
+else:
+    print("\nCopy the ID shown at the end of the line you want:\n")
+    for b in items:
+        print(f"- {b.get('name')}  —  {b.get('id')}")
+PY
